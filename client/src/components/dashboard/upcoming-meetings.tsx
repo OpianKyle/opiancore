@@ -89,8 +89,11 @@ export default function UpcomingMeetings({ meetings, isLoading }: UpcomingMeetin
         {upcomingMeetings.length === 0 ? (
           <div className="text-center py-6">
             <p className="text-sm text-muted-foreground mb-2">No upcoming meetings</p>
-            <Link href="/meetings">
-              <a className="text-primary hover:text-primary/80 text-sm">Schedule a meeting</a>
+            <Link 
+              href="/meetings"
+              className="text-primary hover:text-primary/80 text-sm"
+            >
+              Schedule a meeting
             </Link>
           </div>
         ) : (

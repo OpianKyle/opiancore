@@ -57,10 +57,12 @@ export default function RecentDocuments() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-md">Recent Documents</CardTitle>
-          <Link href="/documents">
-            <a className="text-primary hover:text-primary/80 text-sm" data-testid="link-view-all-documents">
-              View All
-            </a>
+          <Link 
+            href="/documents"
+            className="text-primary hover:text-primary/80 text-sm"
+            data-testid="link-view-all-documents"
+          >
+            View All
           </Link>
         </div>
       </CardHeader>

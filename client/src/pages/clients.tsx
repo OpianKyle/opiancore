@@ -111,6 +111,7 @@ export default function Clients() {
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Add New Client</DialogTitle>
+              <p className="text-sm text-muted-foreground">Create a new client profile to manage their information and projects.</p>
             </DialogHeader>
             <ClientForm onSuccess={() => setIsCreateOpen(false)} />
           </DialogContent>
@@ -211,6 +212,7 @@ export default function Clients() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit Client</DialogTitle>
+            <p className="text-sm text-muted-foreground">Update client information and settings.</p>
           </DialogHeader>
           {editingClient && (
             <ClientForm

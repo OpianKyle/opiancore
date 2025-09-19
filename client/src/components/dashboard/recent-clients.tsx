@@ -70,10 +70,12 @@ export default function RecentClients({ clients, isLoading }: RecentClientsProps
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Recent Clients</CardTitle>
-          <Link href="/clients">
-            <a className="text-primary hover:text-primary/80 text-sm font-medium" data-testid="link-view-all-clients">
-              View All
-            </a>
+          <Link 
+            href="/clients"
+            className="text-primary hover:text-primary/80 text-sm font-medium"
+            data-testid="link-view-all-clients"
+          >
+            View All
           </Link>
         </div>
       </CardHeader>
@@ -81,8 +83,11 @@ export default function RecentClients({ clients, isLoading }: RecentClientsProps
         {recentClients.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-muted-foreground">No clients yet</p>
-            <Link href="/clients">
-              <a className="text-primary hover:text-primary/80 text-sm">Add your first client</a>
+            <Link 
+              href="/clients"
+              className="text-primary hover:text-primary/80 text-sm"
+            >
+              Add your first client
             </Link>
           </div>
         ) : (
