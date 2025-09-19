@@ -114,10 +114,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createClient(client: InsertClient): Promise<Client> {
-    await db.insert(clients).values(client);
-    // Get the created client
-    const [newClient] = await db.select().from(clients).where(eq(clients.name, client.name)).orderBy(desc(clients.createdAt)).limit(1);
-    return newClient;
+    // Generate ID if not provided
+    const clientWithId = {
+      ...client,
+      id: client.id || nanoid()
+    };
+    
+    await db.insert(clients).values(clientWithId);
+    
+    // Return the inserted client by ID
+    const [result] = await db
+      .select()
+      .from(clients)
+      .where(eq(clients.id, clientWithId.id))
+      .limit(1);
+
+    return result;
   }
 
   async updateClient(id: string, client: Partial<InsertClient>): Promise<Client> {
@@ -194,20 +206,25 @@ export class DatabaseStorage implements IStorage {
     const year = new Date().getFullYear();
     const prefix = `Q${year}-`;
     
-    const [lastQuote] = await db
-      .select()
-      .from(quotes)
-      .where(like(quotes.quoteNumber, `${prefix}%`))
-      .orderBy(desc(quotes.quoteNumber))
-      .limit(1);
+    // Use a transaction to prevent race conditions
+    return await db.transaction(async (tx) => {
+      // Lock the table to prevent concurrent modifications
+      const [lastQuote] = await tx
+        .select()
+        .from(quotes)
+        .where(like(quotes.quoteNumber, `${prefix}%`))
+        .orderBy(desc(quotes.quoteNumber))
+        .limit(1)
+        .for("update");
 
-    if (!lastQuote) {
-      return `${prefix}001`;
-    }
+      if (!lastQuote) {
+        return `${prefix}001`;
+      }
 
-    const lastNumber = parseInt(lastQuote.quoteNumber.replace(prefix, ''));
-    const nextNumber = (lastNumber + 1).toString().padStart(3, '0');
-    return `${prefix}${nextNumber}`;
+      const lastNumber = parseInt(lastQuote.quoteNumber.replace(prefix, ''));
+      const nextNumber = (lastNumber + 1).toString().padStart(3, '0');
+      return `${prefix}${nextNumber}`;
+    });
   }
 
   // Meeting operations
@@ -224,11 +241,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMeeting(meeting: InsertMeeting): Promise<Meeting> {
-    await db.insert(meetings).values(meeting);
+    // Generate ID if not provided
+    const meetingWithId = {
+      ...meeting,
+      id: meeting.id || nanoid()
+    };
     
-    // Get the created meeting
-    const [newMeeting] = await db.select().from(meetings).where(eq(meetings.title, meeting.title)).orderBy(desc(meetings.createdAt)).limit(1);
-    return newMeeting;
+    await db.insert(meetings).values(meetingWithId);
+    
+    // Return the inserted meeting by ID
+    const [result] = await db
+      .select()
+      .from(meetings)
+      .where(eq(meetings.id, meetingWithId.id))
+      .limit(1);
+
+    return result;
   }
 
   async updateMeeting(id: string, meeting: Partial<InsertMeeting>): Promise<Meeting> {

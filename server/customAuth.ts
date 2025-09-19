@@ -35,11 +35,16 @@ export function createSessionStore() {
 }
 
 export function getSession() {
+  // Validate required session secret for security
+  if (!process.env.SESSION_SECRET) {
+    throw new Error('SESSION_SECRET environment variable is required for security');
+  }
+  
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   const sessionStore = createSessionStore();
   
   return session({
-    secret: process.env.SESSION_SECRET || 'opian-core-secret-key',
+    secret: process.env.SESSION_SECRET,
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
@@ -47,6 +52,7 @@ export function getSession() {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: sessionTtl,
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
     },
   });
 }

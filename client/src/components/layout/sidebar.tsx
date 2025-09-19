@@ -25,8 +25,18 @@ export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth() as { user: any };
 
-  const handleLogout = () => {
-    window.location.href = "/api/logout";
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Force redirect even if logout fails
+      window.location.href = "/";
+    }
   };
 
   const getUserInitials = (user: any) => {
