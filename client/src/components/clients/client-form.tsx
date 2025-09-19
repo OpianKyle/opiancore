@@ -12,9 +12,12 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertClientSchema, type Client, type InsertClient } from "@shared/schema";
 import { z } from "zod";
 
-const clientFormSchema = insertClientSchema.extend({
+// Create a custom schema for the form (excluding server-managed fields)
+const clientFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address").optional().or(z.literal("")),
+  email: z.string().optional().refine((val) => !val || z.string().email().safeParse(val).success, {
+    message: "Invalid email address"
+  }),
   phone: z.string().optional(),
   company: z.string().optional(),
   address: z.string().optional(),
@@ -89,8 +92,6 @@ export default function ClientForm({ client, onSuccess }: ClientFormProps) {
   });
 
   const onSubmit = (data: ClientFormData) => {
-    console.log("Form submitted with data:", data);
-    console.log("Form errors:", form.formState.errors);
     createClientMutation.mutate(data);
   };
 
