@@ -115,10 +115,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createClient(client: InsertClient): Promise<Client> {
-    // Generate ID if not provided
+    // Generate ID for insertion
+    const id = nanoid();
     const clientWithId = {
       ...client,
-      id: client.id || nanoid()
+      id
     };
     
     await db.insert(clients).values(clientWithId);
@@ -127,7 +128,7 @@ export class DatabaseStorage implements IStorage {
     const [result] = await db
       .select()
       .from(clients)
-      .where(eq(clients.id, clientWithId.id))
+      .where(eq(clients.id, id))
       .limit(1);
 
     return result;
@@ -242,10 +243,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMeeting(meeting: InsertMeeting): Promise<Meeting> {
-    // Generate ID if not provided
+    // Generate ID for insertion
+    const id = nanoid();
     const meetingWithId = {
       ...meeting,
-      id: meeting.id || nanoid()
+      id
     };
     
     await db.insert(meetings).values(meetingWithId);
@@ -254,7 +256,7 @@ export class DatabaseStorage implements IStorage {
     const [result] = await db
       .select()
       .from(meetings)
-      .where(eq(meetings.id, meetingWithId.id))
+      .where(eq(meetings.id, id))
       .limit(1);
 
     return result;

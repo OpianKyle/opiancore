@@ -62,19 +62,18 @@ export default function Sidebar() {
             
             return (
               <li key={item.name}>
-                <Link href={item.href}>
-                  <a
-                    className={cn(
-                      "flex items-center p-3 rounded-lg font-medium transition-colors",
-                      isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "text-foreground hover:bg-accent hover:text-accent-foreground"
-                    )}
-                    data-testid={`nav-${item.name.toLowerCase()}`}
-                  >
-                    <Icon className="mr-3 h-5 w-5" />
-                    {item.name}
-                  </a>
+                <Link 
+                  href={item.href}
+                  className={cn(
+                    "flex items-center p-3 rounded-lg font-medium transition-colors",
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                  data-testid={`nav-${item.name.toLowerCase()}`}
+                >
+                  <Icon className="mr-3 h-5 w-5" />
+                  {item.name}
                 </Link>
               </li>
             );
