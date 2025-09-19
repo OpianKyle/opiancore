@@ -2,101 +2,101 @@ import { sql } from 'drizzle-orm';
 import { relations } from 'drizzle-orm';
 import {
   index,
-  jsonb,
-  pgTable,
+  json,
+  mysqlTable,
   text,
   varchar,
   timestamp,
   decimal,
-  integer,
+  int,
   boolean,
-} from "drizzle-orm/pg-core";
+} from "drizzle-orm/mysql-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Session storage table (mandatory for Replit Auth)
-export const sessions = pgTable(
+// Session storage table
+export const sessions = mysqlTable(
   "sessions",
   {
-    sid: varchar("sid").primaryKey(),
-    sess: jsonb("sess").notNull(),
+    sid: varchar("sid", { length: 128 }).primaryKey(),
+    sess: json("sess").notNull(),
     expire: timestamp("expire").notNull(),
   },
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table (mandatory for Replit Auth)
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").unique(),
-  firstName: varchar("first_name"),
-  lastName: varchar("last_name"),
-  profileImageUrl: varchar("profile_image_url"),
-  role: varchar("role").notNull().default("consultant"), // 'admin' or 'consultant'
+// User storage table
+export const users = mysqlTable("users", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
+  email: varchar("email", { length: 255 }).unique(),
+  firstName: varchar("first_name", { length: 255 }),
+  lastName: varchar("last_name", { length: 255 }),
+  profileImageUrl: varchar("profile_image_url", { length: 512 }),
+  role: varchar("role", { length: 50 }).notNull().default("consultant"), // 'admin' or 'consultant'
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Clients table
-export const clients = pgTable("clients", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const clients = mysqlTable("clients", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
   name: text("name").notNull(),
   company: text("company"),
   email: text("email"),
   phone: text("phone"),
   address: text("address"),
   notes: text("notes"),
-  status: varchar("status").notNull().default("active"), // 'active', 'prospect', 'inactive'
-  createdBy: varchar("created_by").notNull().references(() => users.id),
+  status: varchar("status", { length: 50 }).notNull().default("active"), // 'active', 'prospect', 'inactive'
+  createdBy: varchar("created_by", { length: 36 }).notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Quotes table
-export const quotes = pgTable("quotes", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  clientId: varchar("client_id").notNull().references(() => clients.id),
-  quoteNumber: varchar("quote_number").notNull().unique(),
+export const quotes = mysqlTable("quotes", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
+  clientId: varchar("client_id", { length: 36 }).notNull().references(() => clients.id),
+  quoteNumber: varchar("quote_number", { length: 100 }).notNull().unique(),
   title: text("title").notNull(),
   description: text("description"),
-  items: jsonb("items").notNull(), // Array of quote line items
+  items: json("items").notNull(), // Array of quote line items
   subtotal: decimal("subtotal", { precision: 12, scale: 2 }).notNull(),
   tax: decimal("tax", { precision: 12, scale: 2 }).notNull().default("0"),
   total: decimal("total", { precision: 12, scale: 2 }).notNull(),
-  status: varchar("status").notNull().default("draft"), // 'draft', 'sent', 'accepted', 'rejected'
+  status: varchar("status", { length: 50 }).notNull().default("draft"), // 'draft', 'sent', 'accepted', 'rejected'
   validUntil: timestamp("valid_until"),
-  createdBy: varchar("created_by").notNull().references(() => users.id),
+  createdBy: varchar("created_by", { length: 36 }).notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Meetings table
-export const meetings = pgTable("meetings", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  clientId: varchar("client_id").notNull().references(() => clients.id),
+export const meetings = mysqlTable("meetings", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
+  clientId: varchar("client_id", { length: 36 }).notNull().references(() => clients.id),
   title: text("title").notNull(),
   description: text("description"),
   scheduledAt: timestamp("scheduled_at").notNull(),
-  duration: integer("duration").notNull().default(60), // duration in minutes
+  duration: int("duration").notNull().default(60), // duration in minutes
   location: text("location"),
   agenda: text("agenda"),
   notes: text("notes"),
-  status: varchar("status").notNull().default("scheduled"), // 'scheduled', 'confirmed', 'completed', 'cancelled'
-  createdBy: varchar("created_by").notNull().references(() => users.id),
+  status: varchar("status", { length: 50 }).notNull().default("scheduled"), // 'scheduled', 'confirmed', 'completed', 'cancelled'
+  createdBy: varchar("created_by", { length: 36 }).notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Documents table
-export const documents = pgTable("documents", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  clientId: varchar("client_id").notNull().references(() => clients.id),
+export const documents = mysqlTable("documents", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
+  clientId: varchar("client_id", { length: 36 }).notNull().references(() => clients.id),
   filename: text("filename").notNull(),
   originalName: text("original_name").notNull(),
   mimeType: text("mime_type").notNull(),
-  size: integer("size").notNull(),
+  size: int("size").notNull(),
   path: text("path").notNull(),
-  uploadedBy: varchar("uploaded_by").notNull().references(() => users.id),
+  uploadedBy: varchar("uploaded_by", { length: 36 }).notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
