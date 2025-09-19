@@ -89,6 +89,8 @@ export default function ClientForm({ client, onSuccess }: ClientFormProps) {
   });
 
   const onSubmit = (data: ClientFormData) => {
+    console.log("Form submitted with data:", data);
+    console.log("Form errors:", form.formState.errors);
     createClientMutation.mutate(data);
   };
 
@@ -154,10 +156,10 @@ export default function ClientForm({ client, onSuccess }: ClientFormProps) {
           <Label htmlFor="status">Status</Label>
           <Select
             value={form.watch("status")}
-            onValueChange={(value) => form.setValue("status", value as "active" | "prospect" | "inactive")}
+            onValueChange={(value) => form.setValue("status", value as "active" | "prospect" | "inactive", { shouldValidate: true })}
           >
             <SelectTrigger data-testid="select-client-status">
-              <SelectValue />
+              <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="active">Active</SelectItem>
