@@ -42,10 +42,100 @@ export async function ensureTablesExist() {
   try {
     const connection = await pool.getConnection();
     
-    // Create tables using the schema definitions - this will be implemented
-    // after we update the authentication system to not depend on sessions table
-    console.log('Database tables verification completed');
-    
+    // Create users table
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS users (
+        id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+        email VARCHAR(255) UNIQUE NOT NULL,
+        first_name VARCHAR(255) NOT NULL,
+        last_name VARCHAR(255) NOT NULL,
+        profile_image_url VARCHAR(512),
+        password_hash VARCHAR(255) NOT NULL,
+        role VARCHAR(50) NOT NULL DEFAULT 'consultant',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create clients table
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS clients (
+        id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+        name TEXT NOT NULL,
+        company TEXT,
+        email TEXT,
+        phone TEXT,
+        address TEXT,
+        notes TEXT,
+        status VARCHAR(50) NOT NULL DEFAULT 'active',
+        created_by VARCHAR(36) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (created_by) REFERENCES users(id)
+      )
+    `);
+
+    // Create quotes table
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS quotes (
+        id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+        client_id VARCHAR(36) NOT NULL,
+        quote_number VARCHAR(100) NOT NULL UNIQUE,
+        title TEXT NOT NULL,
+        description TEXT,
+        items JSON NOT NULL,
+        subtotal DECIMAL(12,2) NOT NULL,
+        tax DECIMAL(12,2) NOT NULL DEFAULT 0,
+        total DECIMAL(12,2) NOT NULL,
+        status VARCHAR(50) NOT NULL DEFAULT 'draft',
+        valid_until TIMESTAMP,
+        created_by VARCHAR(36) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (client_id) REFERENCES clients(id),
+        FOREIGN KEY (created_by) REFERENCES users(id)
+      )
+    `);
+
+    // Create meetings table
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS meetings (
+        id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+        client_id VARCHAR(36) NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        scheduled_at TIMESTAMP NOT NULL,
+        duration INT NOT NULL DEFAULT 60,
+        location TEXT,
+        agenda TEXT,
+        notes TEXT,
+        status VARCHAR(50) NOT NULL DEFAULT 'scheduled',
+        created_by VARCHAR(36) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (client_id) REFERENCES clients(id),
+        FOREIGN KEY (created_by) REFERENCES users(id)
+      )
+    `);
+
+    // Create documents table
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS documents (
+        id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+        client_id VARCHAR(36) NOT NULL,
+        filename TEXT NOT NULL,
+        original_name TEXT NOT NULL,
+        mime_type TEXT NOT NULL,
+        size INT NOT NULL,
+        path TEXT NOT NULL,
+        uploaded_by VARCHAR(36) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (client_id) REFERENCES clients(id),
+        FOREIGN KEY (uploaded_by) REFERENCES users(id)
+      )
+    `);
+
+    console.log('Database tables created/verified successfully');
     connection.release();
   } catch (error) {
     console.error('Error ensuring tables exist:', error);

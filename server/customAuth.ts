@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import { nanoid } from 'nanoid';
 import MySQLStore from 'express-mysql-session';
 import { pool } from './db';
-import { storage } from './storage';
+import { storage } from './mysqlStorage';
 import type { Express, RequestHandler } from 'express';
 
 // Extend session types

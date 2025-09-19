@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { storage } from "./storage";
+import { storage } from "./mysqlStorage";
 import { setupAuth, isAuthenticated } from "./customAuth";
 import { insertClientSchema, insertQuoteSchema, insertMeetingSchema } from "@shared/schema";
 import { z } from "zod";
