@@ -19,9 +19,10 @@ import { db } from "./db";
 import { eq, desc, like, and, or } from "drizzle-orm";
 
 export interface IStorage {
-  // User operations (mandatory for Replit Auth)
+  // User operations
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  searchUsers(email: string): Promise<User[]>;
   
   // Client operations
   getClients(userId: string, isAdmin: boolean): Promise<Client[]>;
@@ -72,15 +73,23 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .insert(users)
       .values(userData)
-      .onConflictDoUpdate({
-        target: users.id,
+      .onDuplicateKeyUpdate({
         set: {
-          ...userData,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
+          passwordHash: userData.passwordHash,
+          role: userData.role,
           updatedAt: new Date(),
         },
       })
       .returning();
     return user;
+  }
+
+  async searchUsers(email: string): Promise<User[]> {
+    return await db.select().from(users).where(eq(users.email, email));
   }
 
   // Client operations

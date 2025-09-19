@@ -4,7 +4,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated } from "./customAuth";
 import { insertClientSchema, insertQuoteSchema, insertMeetingSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -31,26 +31,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
+  // Note: Auth routes are now handled in setupAuth function
 
   // Dashboard stats
   app.get('/api/dashboard/stats', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const user = req.user;
       const isAdmin = user?.role === 'admin';
       
-      const stats = await storage.getDashboardStats(userId, isAdmin);
+      const stats = await storage.getDashboardStats(user.id, isAdmin);
       res.json(stats);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
@@ -61,16 +50,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Client routes
   app.get('/api/clients', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      const isAdmin = user?.role === 'admin';
+      const user = req.user;
+      const isAdmin = user.role === 'admin';
       const { search } = req.query;
 
       let clients;
       if (search) {
-        clients = await storage.searchClients(search as string, userId, isAdmin);
+        clients = await storage.searchClients(search as string, user.id, isAdmin);
       } else {
-        clients = await storage.getClients(userId, isAdmin);
+        clients = await storage.getClients(user.id, isAdmin);
       }
 
       res.json(clients);
@@ -95,10 +83,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/clients', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = req.user;
       const clientData = insertClientSchema.parse({
         ...req.body,
-        createdBy: userId
+        createdBy: user.id
       });
       
       const client = await storage.createClient(clientData);
@@ -139,11 +127,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Quote routes
   app.get('/api/quotes', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      const isAdmin = user?.role === 'admin';
+      const user = req.user;
+      const isAdmin = user.role === 'admin';
       
-      const quotes = await storage.getQuotes(userId, isAdmin);
+      const quotes = await storage.getQuotes(user.id, isAdmin);
       res.json(quotes);
     } catch (error) {
       console.error("Error fetching quotes:", error);
@@ -166,10 +153,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/quotes', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = req.user;
       const quoteData = insertQuoteSchema.parse({
         ...req.body,
-        createdBy: userId
+        createdBy: user.id
       });
       
       const quote = await storage.createQuote(quoteData);
@@ -210,11 +197,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Meeting routes
   app.get('/api/meetings', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      const isAdmin = user?.role === 'admin';
+      const user = req.user;
+      const isAdmin = user.role === 'admin';
       
-      const meetings = await storage.getMeetings(userId, isAdmin);
+      const meetings = await storage.getMeetings(user.id, isAdmin);
       res.json(meetings);
     } catch (error) {
       console.error("Error fetching meetings:", error);
@@ -237,10 +223,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/meetings', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = req.user;
       const meetingData = insertMeetingSchema.parse({
         ...req.body,
-        createdBy: userId
+        createdBy: user.id
       });
       
       const meeting = await storage.createMeeting(meetingData);
@@ -295,7 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const userId = req.user.claims.sub;
+      const user = req.user;
       const documentData = {
         clientId: req.params.clientId,
         filename: req.file.filename,
@@ -303,7 +289,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mimeType: req.file.mimetype,
         size: req.file.size,
         path: req.file.path,
-        uploadedBy: userId
+        uploadedBy: user.id
       };
 
       const document = await storage.createDocument(documentData);
