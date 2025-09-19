@@ -17,6 +17,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, like, and, or, count, sum, gte } from "drizzle-orm";
+import { nanoid } from "nanoid";
 
 export interface IStorage {
   // User operations
